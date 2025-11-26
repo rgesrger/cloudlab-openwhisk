@@ -1,45 +1,17 @@
 whisk:
-  deploymentName: owdev
-  namespace: openwhisk
-
-  # Controller configuration
-  controller:
-    image:
-      repository: openwhisk/controller
-      tag: 1.0.0  # x86_64 image
-    resources:
-      limits:
-        cpu: 2
-        memory: 3Gi
-      requests:
-        cpu: 1
-        memory: 2Gi
-    securityContext:
-      runAsUser: 0
-      runAsGroup: 0
-      fsGroup: 0
-    env:
-      CONFIG_whisk_couchdb_username: whisk_admin
-      CONFIG_whisk_couchdb_password: mysecretpassword
-      CONFIG_whisk_couchdb_protocol: http
-      CONFIG_whisk_couchdb_host: owdev-couchdb.openwhisk.svc.cluster.local
-      CONFIG_whisk_couchdb_port: "5984"
-      CONFIG_whisk_couchdb_database: whisk
-    instances: 1
-
-  # Kafka configuration
-  kafka:
+  ingress:
+    type: NodePort
+    apiHostName: REPLACE_ME_WITH_IP
+    apiHostPort: 31001
+k8s:
+  persistence:
     enabled: false
-
-couchdb:
-  image:
-    repository: couchdb
-    tag: 3.2.2  # x86_64 image
-  replicas: 1
-  cluster: false
-  username: whisk_admin
-  password: mysecretpassword
-  securityContext:
-    runAsUser: 5984
-    runAsGroup: 5984
-    fsGroup: 5984
+nginx:
+  httpsNodePort: 31001
+invoker:
+  containerFactory:
+    impl: "REPLACE_ME_WITH_INVOKER_ENGINE"
+    REPLACE_ME_WITH_INVOKER_ENGINE: 
+      replicaCount: REPLACE_ME_WITH_INVOKER_COUNT
+scheduler:
+  enabled: REPLACE_ME_WITH_SCHEDULER_ENABLED
