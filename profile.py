@@ -23,12 +23,11 @@ pc = portal.Context()
 pc.defineParameter("nodeCount", 
                    "Number of nodes in the experiment. It is recommended that at least 3 be used.",
                    portal.ParameterType.INTEGER, 
-                   1)
-# default:any
+                   3)
 pc.defineParameter("nodeType", 
                    "Node Hardware Type",
                    portal.ParameterType.NODETYPE, 
-                   "",
+                   "m510",
                    longDescription="A specific hardware type to use for all nodes. This profile has primarily been tested with m510 and xl170 nodes.")
 pc.defineParameter("startKubernetes",
                    "Create Kubernetes cluster",
