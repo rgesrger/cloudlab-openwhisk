@@ -1,0 +1,34 @@
+FROM python:3.10-slim
+
+# Install system dependencies required by PyTorch CPU
+RUN apt-get update && \
+    apt-get install -y git libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --no-cache-dir torch transformers
+
+# Pre-download the model + tokenizer into /models (offline-safe)
+RUN mkdir -p /models && \
+    python3 - <<EOF
+from transformers import AutoTokenizer, AutoModelForCausalLM
+AutoTokenizer.from_pretrained("distilgpt2", cache_dir="/models")
+AutoModelForCausalLM.from_pretrained("distilgpt2", cache_dir="/models")
+EOF
+
+# Tell HF transformers to always use the local /models directory
+ENV TRANSFORMERS_CACHE=/models
+
+# Set working directory
+WORKDIR /action
+
+# Copy your action code
+COPY action.py /action/action.py
+
+# Create OpenWhisk exec wrapper
+RUN echo "#!/usr/bin/env bash" > /action/exec && \
+    echo "python /action/action.py" >> /action/exec && \
+    chmod +x /action/exec
+
+# Entrypoint for OpenWhisk
+ENTRYPOINT ["/action/exec"]
