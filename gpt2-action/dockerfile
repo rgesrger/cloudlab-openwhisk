@@ -1,3 +1,4 @@
+# Use Python slim base image
 FROM python:3.10-slim
 
 # Install system dependencies required by PyTorch CPU
@@ -9,17 +10,14 @@ RUN apt-get update && \
 RUN pip install --no-cache-dir torch transformers
 
 # Pre-download the model + tokenizer into /models (offline-safe)
-RUN mkdir -p /models && \
-    python3 - <<EOF
-from transformers import AutoTokenizer, AutoModelForCausalLM
-AutoTokenizer.from_pretrained("distilgpt2", cache_dir="/models")
-AutoModelForCausalLM.from_pretrained("distilgpt2", cache_dir="/models")
-EOF
+WORKDIR /tmp
+COPY preload_models.py /tmp/preload_models.py
+RUN python3 preload_models.py
 
-# Tell HF transformers to always use the local /models directory
+# Tell HuggingFace transformers to always use the local /models directory
 ENV TRANSFORMERS_CACHE=/models
 
-# Set working directory
+# Set working directory for the action
 WORKDIR /action
 
 # Copy your action code
