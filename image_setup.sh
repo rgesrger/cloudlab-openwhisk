@@ -1,14 +1,20 @@
 #!/bin/bash
 set -x
 
-# Use particular docker and kubernetes versions. When I've tried to upgrade, I've seen slowdowns in 
-# pod creation.
+# ### FIX: Prevent interactive prompts hanging the script
+export DEBIAN_FRONTEND=noninteractive
+
 DOCKER_VERSION_STRING=5:20.10.12~3-0~ubuntu-focal
 KUBERNETES_VERSION_STRING=1.23.3-00
 
-# Unlike home directories, this directory will be included in the image
 OW_USER_GROUP=owuser
 INSTALL_DIR=/home/cloudlab-openwhisk
+
+# ### FIX: Wait for unattended-upgrades to release the apt lock
+while sudo fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock >/dev/null 2>&1; do
+   echo "Waiting for apt lock..."
+   sleep 5
+done
 
 # General updates
 sudo apt update
@@ -17,15 +23,11 @@ sudo apt autoremove -y
 
 # Openwhisk build dependencies
 sudo apt install -y nodejs npm default-jre default-jdk
-
-# In order to use wskdev commands, need to run this:
 sudo apt install -y python
-
-# Pip is useful
 sudo apt install -y python3-pip
 python3 -m pip install --upgrade pip
 
-# Install docker (https://docs.docker.com/engine/install/ubuntu/)
+# Install docker
 sudo apt install -y \
     ca-certificates \
     curl \
@@ -71,7 +73,7 @@ sudo ./get_helm.sh
 
 # Create $OW_USER_GROUP group so $INSTALL_DIR can be accessible to everyone
 sudo groupadd $OW_USER_GROUP
-sudo mkdir $INSTALL_DIR
+sudo mkdir -p $INSTALL_DIR
 sudo chgrp -R $OW_USER_GROUP $INSTALL_DIR
 sudo chmod -R o+rw $INSTALL_DIR
 
